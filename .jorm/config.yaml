@@ -1,0 +1,67 @@
+max_attempts: 0
+model: opus
+profile: default
+
+conductor:
+  enabled: true
+  classify_model: haiku
+  staged: true
+
+issue_provider: github
+
+providers:
+  github:
+    token_var: HUNDRED_ACRE_STUDIO_GITHUB_TOKEN
+
+validators:
+  - id: tests
+    name: Tests
+    type: shell
+    command: "go test ./..."
+    on_fail: reject
+    timeout: 120s
+
+  - id: vet
+    name: Vet
+    type: shell
+    command: "go vet ./..."
+    on_fail: warn
+    timeout: 30s
+
+  - id: tester
+    name: Tester
+    type: claude
+    mode: review
+    prompt: "builtin:tester-review"
+    on_fail: reject
+    timeout: 300s
+
+  - id: pr-review
+    name: PR Review
+    type: claude
+    prompt: "builtin:pr-review"
+    on_fail: reject
+    timeout: 300s
+
+  - id: security
+    name: Security Review
+    type: claude
+    prompt: "builtin:security-review"
+    on_fail: reject
+    timeout: 300s
+
+  - id: commit
+    name: Commit
+    type: claude
+    mode: action
+    prompt: "builtin:commit"
+    on_fail: reject
+    run_on: accept_only
+    timeout: 120s
+
+profiles:
+  default:
+    - tester
+    - pr-review
+    - security
+    - commit
